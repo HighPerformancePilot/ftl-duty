@@ -58,9 +58,18 @@ body{
 .setup-chip:active{background:var(--bg4);}
 .chip-label{
   font-family:'Share Tech Mono',monospace;font-size:9px;
-  letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;
 }
-.chip-values{font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--text);letter-spacing:1px;}
+.chip-main{
+  display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;
+  font-family:'Share Tech Mono',monospace;font-size:17px;color:var(--text);letter-spacing:1px;
+}
+.chip-sep{color:var(--text-muted);font-size:13px;}
+.chip-lcl-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);opacity:.5;}
+.chip-sub{
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  color:var(--text-dim);letter-spacing:.5px;margin-top:5px;
+}
 .chip-edit{
   font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--amber);border:1px solid var(--border);border-radius:5px;
@@ -337,8 +346,14 @@ body{
 
   <div class="setup-chip" onclick="editSetup()">
     <div class="chip-content">
-      <div class="chip-label">Duty Setup</div>
-      <div class="chip-values" id="d-chip"></div>
+      <div class="chip-label">Report Time</div>
+      <div class="chip-main">
+        <span id="d-chip-utc">--:--Z</span>
+        <span class="chip-sep">·</span>
+        <span id="d-chip-local">--:--</span>
+        <span class="chip-lcl-lbl">LCL</span>
+      </div>
+      <div class="chip-sub" id="d-chip-sub">-- SECTORS · MAX FDP --:--</div>
     </div>
     <div class="chip-edit">EDIT</div>
   </div>
@@ -388,8 +403,14 @@ body{
 
   <div class="setup-chip" onclick="editSetup()">
     <div class="chip-content">
-      <div class="chip-label">Duty Setup</div>
-      <div class="chip-values" id="p-chip"></div>
+      <div class="chip-label">Report Time</div>
+      <div class="chip-main">
+        <span id="p-chip-utc">--:--Z</span>
+        <span class="chip-sep">·</span>
+        <span id="p-chip-local">--:--</span>
+        <span class="chip-lcl-lbl">LCL</span>
+      </div>
+      <div class="chip-sub" id="p-chip-sub">-- SECTORS · MAX FDP --:--</div>
     </div>
     <div class="chip-edit">EDIT</div>
   </div>
@@ -585,10 +606,21 @@ function updateSetupUI(){
   document.getElementById('s-gmt').value = S.reportGmt;
 }
 
-/* ── Chip text ───────────────────────────── */
-function chipText(){
-  const {maxFdpStr} = derived();
-  return `${S.reportGmt}Z · ${fmtOffset(S.depOffset)} · ${S.sectors} SEC · MAX ${maxFdpStr}`;
+/* ── Chip update ─────────────────────────── */
+function updateChip(){
+  const {localMin, maxFdpStr} = derived();
+  const utcStr  = S.reportGmt + 'Z';
+  const lclStr  = fmtUtcMin(localMin);
+  const secWord = S.sectors === 1 ? 'SECTOR' : 'SECTORS';
+  const subStr  = S.sectors + ' ' + secWord + ' · MAX FDP ' + maxFdpStr;
+
+  ['d','p'].forEach(function(pfx){
+    const utcEl = document.getElementById(pfx+'-chip-utc');
+    if(!utcEl) return;
+    utcEl.textContent = utcStr;
+    document.getElementById(pfx+'-chip-local').textContent = lclStr;
+    document.getElementById(pfx+'-chip-sub').textContent   = subStr;
+  });
 }
 
 /* ── Countdown ───────────────────────────── */
@@ -631,8 +663,8 @@ function tickCountdown(){
 }
 
 function updateDutyUI(){
-  const {chocksUtcMin, chocksLocalMin, maxFdpStr} = derived();
-  document.getElementById('d-chip').textContent = chipText();
+  const {chocksUtcMin, chocksLocalMin} = derived();
+  updateChip();
   document.getElementById('d-chocks-utc').textContent = fmtUtcMin(chocksUtcMin);
   document.getElementById('d-chocks-local').textContent = fmtUtcMin(chocksLocalMin);
   document.getElementById('d-dest-val').textContent = fmtOffset(S.destOffset);
@@ -801,7 +833,7 @@ function goPostFlight(){
   document.getElementById('p-offduty-utc').value = fmtUtcMin(offDutyMin);
   offDutyManuallySet = false;
 
-  document.getElementById('p-chip').textContent = chipText();
+  updateChip();
   document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
   document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
   document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
@@ -843,7 +875,7 @@ document.addEventListener('DOMContentLoaded', function(){
     startCountdown();
     if('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
   } else if(S.phase === 'post'){
-    document.getElementById('p-chip').textContent = chipText();
+    updateChip();
     document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
     document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
     document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';

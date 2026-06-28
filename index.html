@@ -680,7 +680,6 @@ function calcPost(){
   const chocksEl = document.getElementById('p-chocks-utc');
   const offdutyEl = document.getElementById('p-offduty-utc');
   const chocksVal = chocksEl.value;
-  const offdutyVal = offdutyEl.value;
 
   // When on-chocks changes and off duty hasn't been manually set, keep it at on-chocks + 30
   if(chocksVal && !offDutyManuallySet){
@@ -688,6 +687,10 @@ function calcPost(){
     const offDutyMin = (chocksUtcMin + 30) % 1440;
     offdutyEl.value = fmtUtcMin(offDutyMin);
   }
+
+  // Re-read AFTER the auto-fill block so local display and calculations
+  // always use the current value, not a stale capture from before auto-fill
+  const offdutyVal = offdutyEl.value;
 
   // Update local displays using dest offset
   if(chocksVal){

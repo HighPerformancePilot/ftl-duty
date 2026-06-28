@@ -322,18 +322,6 @@ body{
           <button class="s-btn" onclick="adjSectors(1)">+</button>
         </div>
       </div>
-      <!-- Home base toggle -->
-      <div class="fgroup">
-        <div class="flbl">Home Base</div>
-        <div style="padding-top:8px;">
-          <div class="toggle-row">
-            <span class="toggle-lbl" id="s-home-lbl">Away</span>
-            <div class="toggle" id="s-home-toggle" onclick="adjHomeBase()">
-              <div class="knob"></div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <button class="btn-primary" onclick="beginDuty()">Begin Duty →</button>
@@ -439,6 +427,17 @@ body{
       <div class="local-col">
         <div class="z">LOCAL</div>
         <div class="local-val" id="p-offduty-local">--:--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home base — affects min rest, confirmed at sign-off -->
+  <div class="doff-row">
+    <span class="doff-lbl">Home Base</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="toggle-lbl" id="p-home-lbl">Away</span>
+      <div class="toggle" id="p-home-toggle" onclick="adjHomeBase()">
+        <div class="knob"></div>
       </div>
     </div>
   </div>
@@ -572,8 +571,9 @@ function adjOffset(d){ S.depOffset += d; updateSetupUI(); save(); }
 function adjSectors(d){ S.sectors = Math.max(1,Math.min(10,S.sectors+d)); updateSetupUI(); save(); }
 function adjHomeBase(){
   S.homeBase = !S.homeBase;
-  document.getElementById('s-home-toggle').classList.toggle('on', S.homeBase);
-  document.getElementById('s-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
+  document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
+  document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
+  calcPost();
   save();
 }
 function updateSetupUI(){
@@ -583,8 +583,6 @@ function updateSetupUI(){
   document.getElementById('s-local').textContent = fmtUtcMin(localMin);
   document.getElementById('s-maxfdp').textContent = maxFdpStr;
   document.getElementById('s-gmt').value = S.reportGmt;
-  document.getElementById('s-home-toggle').classList.toggle('on', S.homeBase);
-  document.getElementById('s-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
 }
 
 /* ── Chip text ───────────────────────────── */
@@ -802,6 +800,8 @@ function goPostFlight(){
 
   document.getElementById('p-chip').textContent = chipText();
   document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
+  document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
+  document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
   document.getElementById('p-results').style.display = 'none';
   showPhase('post');
   calcPost();
@@ -842,6 +842,8 @@ document.addEventListener('DOMContentLoaded', function(){
   } else if(S.phase === 'post'){
     document.getElementById('p-chip').textContent = chipText();
     document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
+    document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
+    document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
     showPhase('post');
     calcPost();
   } else {

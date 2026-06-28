@@ -360,7 +360,14 @@ body{
 
   <!-- Latest on-chocks -->
   <div class="card">
-    <div class="card-title">Latest On-Chocks</div>
+    <div class="card-title-row">
+      <div class="card-title">Latest On-Chocks</div>
+      <div class="stepper sm">
+        <button class="s-btn" onclick="adjDestOffset(-60)">−</button>
+        <span class="s-val" id="d-dest-val">+0:00</span>
+        <button class="s-btn" onclick="adjDestOffset(60)">+</button>
+      </div>
+    </div>
     <div class="time-pair">
       <div class="t-block">
         <div class="z">UTC</div>
@@ -378,16 +385,6 @@ body{
     <div class="cd-label">Time to Limit</div>
     <div class="cd-timer green" id="cd-timer">--:--:--</div>
     <div class="cd-status" id="cd-status"></div>
-  </div>
-
-  <!-- Dest offset (compact, relevant once airborne) -->
-  <div class="doff-row">
-    <span class="doff-lbl">Dest UTC Offset</span>
-    <div class="stepper sm">
-      <button class="s-btn" onclick="adjDestOffset(-60)">−</button>
-      <span class="s-val" id="d-dest-val">+0:00</span>
-      <button class="s-btn" onclick="adjDestOffset(60)">+</button>
-    </div>
   </div>
 
   <button class="btn-primary" onclick="goPostFlight()">On Chocks →</button>
@@ -417,14 +414,7 @@ body{
 
   <!-- Actual on-chocks -->
   <div class="card">
-    <div class="card-title-row">
-      <div class="card-title">Actual On-Chocks</div>
-      <div class="stepper sm">
-        <button class="s-btn" onclick="adjDestOffset(-60)">−</button>
-        <span class="s-val" id="p-dest-val">+0:00</span>
-        <button class="s-btn" onclick="adjDestOffset(60)">+</button>
-      </div>
-    </div>
+    <div class="card-title">Actual On-Chocks</div>
     <div class="inp-row">
       <div class="inp-col">
         <div class="z">UTC</div>
@@ -673,7 +663,6 @@ function updateDutyUI(){
 function adjDestOffset(d){
   S.destOffset += d;
   document.getElementById('d-dest-val').textContent = fmtOffset(S.destOffset);
-  document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
   // Update local displays in phase 3 if visible
   calcPost();
   // Update during-duty local on-chocks display
@@ -812,7 +801,6 @@ function beginDuty(){
 
   // Populate duty UI
   updateDutyUI();
-  document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
   showPhase('duty');
   startCountdown();
 
@@ -834,7 +822,6 @@ function goPostFlight(){
   offDutyManuallySet = false;
 
   updateChip();
-  document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
   document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
   document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
   document.getElementById('p-results').style.display = 'none';
@@ -870,13 +857,11 @@ document.addEventListener('DOMContentLoaded', function(){
   // Restore to correct phase
   if(S.phase === 'duty' && S.targetTimestamp){
     updateDutyUI();
-    document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
     showPhase('duty');
     startCountdown();
     if('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(()=>{});
   } else if(S.phase === 'post'){
     updateChip();
-    document.getElementById('p-dest-val').textContent = fmtOffset(S.destOffset);
     document.getElementById('p-home-toggle').classList.toggle('on', S.homeBase);
     document.getElementById('p-home-lbl').textContent = S.homeBase ? 'Home' : 'Away';
     showPhase('post');

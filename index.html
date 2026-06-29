@@ -795,10 +795,16 @@ function beginDuty(){
     now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
     Math.floor(gmtMin/60), gmtMin%60, 0
   ));
-  // If report time appears to be > 8 hours ago, assume it's tomorrow's report
-  if(now - reportDate > 8*3600*1000) reportDate.setUTCDate(reportDate.getUTCDate()+1);
-
-  S.targetTimestamp = reportDate.getTime() + maxFdpMin * 60000;
+  // Compute the on-chocks target from today's report time
+  let target = reportDate.getTime() + maxFdpMin * 60000;
+  // If the target has already passed, the report must be tomorrow — add one day
+  // (this handles setting up the night before, while avoiding the bug where
+  //  a mid-duty entry rolls the target forward an extra 24 hours)
+  if(target < now.getTime()) {
+    reportDate.setUTCDate(reportDate.getUTCDate() + 1);
+    target = reportDate.getTime() + maxFdpMin * 60000;
+  }
+  S.targetTimestamp = target;
   S.alertFired = false;
   save();
 
